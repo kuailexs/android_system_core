@@ -23,6 +23,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include <linux/netlink.h>
 
@@ -103,6 +104,10 @@ int uevent_open_socket(int buf_sz, bool passcred)
     addr.nl_family = AF_NETLINK;
     addr.nl_pid = getpid();
     addr.nl_groups = 0xffffffff;
+
+    char* nl_groups_env = getenv("UEVENT_NETLINK_GROUPS");
+    if(nl_groups_env != NULL)
+      addr.nl_groups = strtoul(nl_groups_env, NULL, 0);
 
     s = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_KOBJECT_UEVENT);
     if(s < 0)
