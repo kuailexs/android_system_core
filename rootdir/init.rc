@@ -499,7 +499,7 @@ on property:sys.sysctl.tcp_def_init_rwnd=*
 service ueventd /sbin/ueventd
     class core
     critical
-    seclabel u:r:ueventd:s0
+
 
 service logd /system/bin/logd
     class core
@@ -511,7 +511,6 @@ service logd /system/bin/logd
 service healthd /sbin/healthd
     class core
     critical
-    seclabel u:r:healthd:s0
 
 service upstart-watcher /sbin/upstart-property-watcher
     class core
@@ -522,21 +521,18 @@ service console /system/bin/sh
     disabled
     user root
     group shell log
-    seclabel u:r:shell:s0
 
 service auditd /system/bin/auditd -k
-    seclabel u:r:logd:s0
     class main
 
 on property:ro.debuggable=1
     start console
 
 # adbd is controlled via property triggers in init.<platform>.usb.rc
-service adbd /sbin/adbd --root_seclabel=u:r:su:s0
+service adbd /sbin/adbd
     class core
     socket adbd stream 660 system system
     disabled
-    seclabel u:r:adbd:s0
 
 # adbd on at boot in emulator
 on property:ro.kernel.qemu=1
@@ -553,10 +549,10 @@ service servicemanager /system/bin/servicemanager
     group system
     critical
     onrestart restart healthd
-    onrestart restart zygote
-    onrestart restart media
-    onrestart restart surfaceflinger
-    onrestart restart drm
+    onrestart restart minimedia
+    onrestart restart minisf
+    onrestart restart miniaf
+
 
 service debuggerd /system/bin/debuggerd
     class main
@@ -564,9 +560,21 @@ service debuggerd /system/bin/debuggerd
 service debuggerd64 /system/bin/debuggerd64
     class main
 
-service miniafservice /system/bin/miniafservice
-    class core
-    user root
+
+service minimedia /system/bin/minimediaservice
+    class main
+    user media
+    group audio camera
+    ioprio rt 4
+
+service minisf /system/bin/minisfservice
+    class main
+    user system
+    group graphics
+
+service miniaf /system/bin/miniafservice
+    class main
+    user system
     group audio
 
 service ril-daemon /system/bin/rild 
